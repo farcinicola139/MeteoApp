@@ -1,0 +1,973 @@
+/* ══════════════════════════════════════════════════════════════
+   Meteo App — Stylesheet con Light/Dark Mode
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Variabili tema Light (default) ─────────────────────────── */
+:root {
+    --bg-gradient-1: #667eea;
+    --bg-gradient-2: #764ba2;
+    --text-primary: #333;
+    --text-secondary: #555;
+    --text-muted: #888;
+    --text-coords: #999;
+
+    --card-bg: #ffffff;
+    --card-shadow: rgba(0, 0, 0, 0.1);
+    --card-hover-shadow: rgba(0, 0, 0, 0.15);
+
+    --search-bg: #ffffff;
+    --search-border: #e0e0e0;
+    --search-shadow: rgba(0, 0, 0, 0.15);
+
+    --stat-bg: #f8f9ff;
+    --forecast-bg: #f0f2ff;
+
+    --sidebar-bg: rgba(255, 255, 255, 0.12);
+    --sidebar-border: rgba(255, 255, 255, 0.2);
+    --sidebar-text: white;
+    --sidebar-muted: rgba(255, 255, 255, 0.6);
+    --fav-card-bg: rgba(255, 255, 255, 0.92);
+    --fav-card-city: #333;
+    --fav-card-temp: #667eea;
+    --fav-card-stat: #666;
+
+    --heart-border: #e0e0e0;
+    --heart-color: #ccc;
+
+    --error-bg: #fee;
+    --error-border: #fcc;
+    --error-color: #c33;
+
+    --city-error-bg: #fff5f5;
+
+    --astro-bg-1: #f5f3ff;
+    --astro-bg-2: #ede9fe;
+    --astro-border: #e8e8ff;
+    --astro-title: #5b21b6;
+    --astro-text: #555;
+    --astro-loading: #7c3aed;
+
+    --planet-bg: white;
+    --planet-visible-bg-1: #faf5ff;
+    --planet-visible-bg-2: #f3e8ff;
+    --planet-visible-border: #7c3aed;
+    --planet-not-visible-border: #e0e0e0;
+    --planet-dim-bg: #f9f9f9;
+
+    --event-bg: white;
+    --event-date: #5b21b6;
+    --event-name: #444;
+
+    --btn-gradient-1: #667eea;
+    --btn-gradient-2: #764ba2;
+    --geo-gradient-1: #38b2ac;
+    --geo-gradient-2: #319795;
+
+    --toggle-bg: #ccc;
+    --toggle-label: #666;
+
+    --header-text: white;
+
+    --forecast-day-name: #555;
+    --forecast-details: #777;
+
+    --hint-color: #888;
+}
+
+/* ── Variabili tema Dark ────────────────────────────────────── */
+[data-theme="dark"] {
+    --bg-gradient-1: #1a1a2e;
+    --bg-gradient-2: #16213e;
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --text-muted: #888;
+    --text-coords: #777;
+
+    --card-bg: #1e1e2f;
+    --card-shadow: rgba(0, 0, 0, 0.4);
+    --card-hover-shadow: rgba(0, 0, 0, 0.5);
+
+    --search-bg: #1e1e2f;
+    --search-border: #3a3a5c;
+    --search-shadow: rgba(0, 0, 0, 0.4);
+
+    --stat-bg: #2a2a40;
+    --forecast-bg: #252540;
+
+    --sidebar-bg: rgba(30, 30, 47, 0.7);
+    --sidebar-border: rgba(255, 255, 255, 0.08);
+    --sidebar-text: #d0d0e0;
+    --sidebar-muted: rgba(255, 255, 255, 0.35);
+    --fav-card-bg: rgba(42, 42, 64, 0.95);
+    --fav-card-city: #d0d0e0;
+    --fav-card-temp: #8b9cf7;
+    --fav-card-stat: #999;
+
+    --heart-border: #4a4a6a;
+    --heart-color: #666;
+
+    --error-bg: #2d1b1b;
+    --error-border: #5c2626;
+    --error-color: #f87171;
+
+    --city-error-bg: #2d1b1b;
+
+    --astro-bg-1: #1e1a30;
+    --astro-bg-2: #241e38;
+    --astro-border: #3a3560;
+    --astro-title: #a78bfa;
+    --astro-text: #b0b0c0;
+    --astro-loading: #a78bfa;
+
+    --planet-bg: #2a2a40;
+    --planet-visible-bg-1: #2a2045;
+    --planet-visible-bg-2: #30254a;
+    --planet-visible-border: #7c3aed;
+    --planet-not-visible-border: #3a3a5c;
+    --planet-dim-bg: #222238;
+
+    --event-bg: #2a2a40;
+    --event-date: #a78bfa;
+    --event-name: #c0c0d0;
+
+    --btn-gradient-1: #5a6fd6;
+    --btn-gradient-2: #6b42a0;
+    --geo-gradient-1: #2d9f99;
+    --geo-gradient-2: #28857f;
+
+    --toggle-bg: #4a4a6a;
+    --toggle-label: #999;
+
+    --header-text: #d0d0e0;
+
+    --forecast-day-name: #b0b0c0;
+    --forecast-details: #888;
+
+    --hint-color: #777;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
+    min-height: 100vh;
+    color: var(--text-primary);
+    transition: background 0.4s ease, color 0.3s ease;
+}
+
+/* ── Layout principale con sidebar ──────────────────────────── */
+.app-layout {
+    display: flex;
+    max-width: 1400px;
+    margin: 0 auto;
+    gap: 20px;
+    padding: 20px;
+}
+
+.main-content {
+    flex: 1;
+    min-width: 0;
+}
+
+/* ── Sidebar preferiti ──────────────────────────────────────── */
+.favorites-sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 20px;
+    align-self: flex-start;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+}
+
+.favorites-panel {
+    background: var(--sidebar-bg);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    padding: 18px;
+    border: 1px solid var(--sidebar-border);
+    transition: background 0.3s;
+}
+
+.favorites-title {
+    color: var(--sidebar-text);
+    font-size: 1em;
+    font-weight: 700;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.fav-empty {
+    color: var(--sidebar-muted);
+    font-size: 0.85em;
+    text-align: center;
+    padding: 16px 0;
+}
+
+.fav-card {
+    background: var(--fav-card-bg);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, background 0.3s;
+    position: relative;
+}
+
+.fav-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px var(--card-hover-shadow);
+}
+
+.fav-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.fav-card-city {
+    font-weight: 700;
+    font-size: 0.95em;
+    color: var(--fav-card-city);
+}
+
+.fav-remove-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1em;
+    color: #e53e3e;
+    padding: 2px;
+    line-height: 1;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.fav-remove-btn:hover {
+    opacity: 1;
+}
+
+.fav-card-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 8px;
+    font-size: 0.78em;
+    color: var(--fav-card-stat);
+}
+
+.fav-card-stats .fav-stat {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.fav-card-temp {
+    font-size: 1.2em;
+    font-weight: 700;
+    color: var(--fav-card-temp);
+    margin-bottom: 4px;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+header {
+    text-align: center;
+    padding: 30px 0 20px;
+    color: var(--header-text);
+    position: relative;
+}
+
+header h1 {
+    font-size: 2.2em;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+header p {
+    opacity: 0.9;
+    font-size: 1.1em;
+}
+
+/* ── Theme Toggle Button ────────────────────────────────────── */
+.theme-toggle-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    font-size: 1.3em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(8px);
+    color: white;
+}
+
+.theme-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.1) rotate(15deg);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .theme-toggle-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .theme-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* ── Search Bar ─────────────────────────────────────────────── */
+.search-box {
+    background: var(--search-bg);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 8px 32px var(--search-shadow);
+    margin-bottom: 24px;
+    transition: background 0.3s, box-shadow 0.3s;
+}
+
+.search-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.search-row input {
+    flex: 1;
+    padding: 14px 20px;
+    border: 2px solid var(--search-border);
+    border-radius: 12px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.3s, background 0.3s, color 0.3s;
+    background: var(--card-bg);
+    color: var(--text-primary);
+}
+
+.search-row input:focus {
+    border-color: var(--btn-gradient-1);
+}
+
+.search-row input::placeholder {
+    color: var(--text-muted);
+}
+
+.search-row button {
+    padding: 14px 28px;
+    background: linear-gradient(135deg, var(--btn-gradient-1), var(--btn-gradient-2));
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    white-space: nowrap;
+}
+
+.search-row button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.search-row button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.hint-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.hint {
+    font-size: 0.85em;
+    color: var(--hint-color);
+}
+
+/* ── Pulsante Geolocalizzazione ─────────────────────────────── */
+#geoBtn {
+    padding: 14px 20px;
+    background: linear-gradient(135deg, var(--geo-gradient-1), var(--geo-gradient-2));
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    white-space: nowrap;
+}
+
+#geoBtn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(56, 178, 172, 0.4);
+}
+
+#geoBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ── Geo Badge ──────────────────────────────────────────────── */
+.geo-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--geo-gradient-1), var(--geo-gradient-2));
+    color: white;
+    font-size: 0.75em;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    vertical-align: middle;
+}
+
+/* ── Toggle Astronomia ──────────────────────────────────────── */
+.astro-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.astro-toggle input {
+    display: none;
+}
+
+.astro-toggle-slider {
+    width: 42px;
+    height: 24px;
+    background: var(--toggle-bg);
+    border-radius: 12px;
+    position: relative;
+    transition: background 0.3s;
+    flex-shrink: 0;
+}
+
+.astro-toggle-slider::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    top: 3px;
+    left: 3px;
+    transition: transform 0.3s;
+}
+
+.astro-toggle input:checked + .astro-toggle-slider {
+    background: linear-gradient(135deg, #5b21b6, #7c3aed);
+}
+
+.astro-toggle input:checked + .astro-toggle-slider::after {
+    transform: translateX(18px);
+}
+
+.astro-toggle-label {
+    font-size: 0.85em;
+    color: var(--toggle-label);
+    font-weight: 600;
+}
+
+.astro-toggle input:checked ~ .astro-toggle-label {
+    color: var(--astro-title);
+}
+
+/* ── Loading ────────────────────────────────────────────────── */
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--header-text);
+    font-size: 1.2em;
+}
+
+.spinner {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-right: 12px;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ── Error ──────────────────────────────────────────────────── */
+.error-msg {
+    background: var(--error-bg);
+    border: 1px solid var(--error-border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    color: var(--error-color);
+    margin-bottom: 16px;
+    transition: background 0.3s, border-color 0.3s;
+}
+
+/* ── City Card ──────────────────────────────────────────────── */
+.city-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 16px var(--card-shadow);
+    transition: transform 0.2s, background 0.3s, box-shadow 0.3s;
+}
+
+.city-card:hover {
+    transform: translateY(-2px);
+}
+
+.city-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.city-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.city-name {
+    font-size: 1.5em;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* ── Heart Button ───────────────────────────────────────────── */
+.heart-btn {
+    background: none;
+    border: 2px solid var(--heart-border);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s ease;
+    line-height: 1;
+    color: var(--heart-color);
+}
+
+.heart-btn:hover {
+    border-color: #e53e3e;
+    background: rgba(229, 62, 62, 0.1);
+    color: #e53e3e;
+    transform: scale(1.1);
+}
+
+.heart-btn.active {
+    border-color: #e53e3e;
+    background: transparent;
+    color: #e53e3e;
+    animation: heartPop 0.3s ease;
+}
+
+@keyframes heartPop {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.3);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.coords {
+    font-size: 0.85em;
+    color: var(--text-coords);
+    margin-bottom: 16px;
+}
+
+/* ── Current Weather ────────────────────────────────────────── */
+.current-weather {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.weather-stat {
+    background: var(--stat-bg);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    transition: background 0.3s;
+}
+
+.weather-stat .icon {
+    font-size: 1.8em;
+    margin-bottom: 4px;
+}
+
+.weather-stat .value {
+    font-size: 1.3em;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.weather-stat .label {
+    font-size: 0.8em;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* ── Forecast ───────────────────────────────────────────────── */
+.forecast-title {
+    font-size: 1.1em;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text-secondary);
+}
+
+.forecast-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 10px;
+}
+
+.forecast-day {
+    background: var(--forecast-bg);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    transition: background 0.3s;
+}
+
+.forecast-day .day-name {
+    font-weight: 700;
+    font-size: 0.9em;
+    color: var(--forecast-day-name);
+    margin-bottom: 8px;
+}
+
+.forecast-day .temps {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.forecast-day .temp-min {
+    color: #60a5fa;
+    font-weight: 600;
+}
+
+.forecast-day .temp-max {
+    color: #f87171;
+    font-weight: 600;
+}
+
+.forecast-day .details {
+    font-size: 0.78em;
+    color: var(--forecast-details);
+    line-height: 1.5;
+}
+
+/* ── Sezione Astronomia ─────────────────────────────────────── */
+.astronomy-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid var(--astro-border);
+    background: linear-gradient(135deg, var(--astro-bg-1) 0%, var(--astro-bg-2) 100%);
+    border-radius: 14px;
+    padding: 20px;
+    transition: background 0.3s, border-color 0.3s;
+}
+
+.astro-loading {
+    text-align: center;
+    color: var(--astro-loading);
+    font-size: 0.9em;
+    padding: 16px;
+}
+
+.spinner-small {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(124, 58, 237, 0.2);
+    border-top-color: var(--astro-loading);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+.astro-error {
+    text-align: center;
+    color: var(--error-color);
+    font-size: 0.85em;
+    padding: 12px;
+}
+
+.astro-sub-section {
+    margin-bottom: 16px;
+}
+
+.astro-sub-section:last-child {
+    margin-bottom: 0;
+}
+
+.astro-sub-title {
+    font-size: 1em;
+    font-weight: 700;
+    color: var(--astro-title);
+    margin-bottom: 8px;
+}
+
+.astro-sun-info,
+.astro-moon-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    font-size: 0.88em;
+    color: var(--astro-text);
+}
+
+/* ── Griglia pianeti ────────────────────────────────────────── */
+.planets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.planet-card {
+    background: var(--planet-bg);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+    border: 2px solid transparent;
+    transition: transform 0.15s, box-shadow 0.15s, background 0.3s;
+}
+
+.planet-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px var(--card-shadow);
+}
+
+.planet-visible {
+    border-color: var(--planet-visible-border);
+    background: linear-gradient(135deg, var(--planet-visible-bg-1), var(--planet-visible-bg-2));
+}
+
+.planet-not-visible {
+    opacity: 0.6;
+    border-color: var(--planet-not-visible-border);
+}
+
+.planet-name {
+    font-weight: 700;
+    font-size: 0.95em;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.planet-details {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    font-size: 0.78em;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.planet-constellation {
+    font-size: 0.75em;
+    color: var(--astro-title);
+    margin-top: 4px;
+}
+
+.planets-below-horizon {
+    margin-top: 10px;
+}
+
+.planets-below-horizon summary {
+    cursor: pointer;
+    font-size: 0.85em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.planets-below-horizon summary:hover {
+    color: var(--astro-title);
+}
+
+.planets-grid-dim .planet-card {
+    background: var(--planet-dim-bg);
+}
+
+.astro-note {
+    font-size: 0.85em;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 8px 0;
+}
+
+/* ── Eventi astronomici ─────────────────────────────────────── */
+.astro-events-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.astro-event {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--event-bg);
+    font-size: 0.88em;
+    transition: background 0.3s;
+}
+
+.event-date {
+    font-weight: 700;
+    color: var(--event-date);
+    min-width: 80px;
+    font-size: 0.85em;
+}
+
+.event-name {
+    color: var(--event-name);
+}
+
+.event-lunar {
+    border-left: 3px solid #f59e0b;
+}
+
+.event-meteor_shower {
+    border-left: 3px solid #ef4444;
+}
+
+.event-conjunction {
+    border-left: 3px solid #7c3aed;
+}
+
+/* ── City Error ─────────────────────────────────────────────── */
+.city-error {
+    background: var(--city-error-bg);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    border-left: 4px solid #e53e3e;
+    transition: background 0.3s;
+}
+
+.city-error .city-name {
+    color: #c53030;
+}
+
+[data-theme="dark"] .city-error .city-name {
+    color: #f87171;
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 900px) {
+    .app-layout {
+        flex-direction: column-reverse;
+    }
+
+    .favorites-sidebar {
+        width: 100%;
+        position: static;
+        max-height: none;
+    }
+
+    .favorites-panel {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+    .favorites-title {
+        width: 100%;
+        margin-bottom: 6px;
+    }
+
+    .fav-card {
+        flex: 1;
+        min-width: 200px;
+        margin-bottom: 0;
+    }
+
+    .theme-toggle-btn {
+        top: 15px;
+        right: 15px;
+        width: 38px;
+        height: 38px;
+        font-size: 1.1em;
+    }
+}
+
+@media (max-width: 600px) {
+    header h1 {
+        font-size: 1.6em;
+    }
+
+    .search-row {
+        flex-direction: column;
+    }
+
+    .search-row button {
+        width: 100%;
+    }
+
+    .current-weather {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .fav-card {
+        min-width: 150px;
+    }
+
+    .theme-toggle-btn {
+        top: 10px;
+        right: 10px;
+        width: 36px;
+        height: 36px;
+        font-size: 1em;
+    }
+}

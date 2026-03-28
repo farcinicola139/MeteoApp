@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌤️ Meteo App</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <h1>🌤️ Meteo App</h1>
+        <p>Previsioni meteo multi-città in tempo reale</p>
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Cambia tema Light/Dark">
+            🌙
+        </button>
+    </header>
+
+    <div class="app-layout">
+        <!-- Contenuto principale -->
+        <div class="main-content">
+            <!-- Search -->
+            <div class="search-box">
+                <div class="search-row">
+                    <input
+                        type="text"
+                        id="cityInput"
+                        placeholder="Es: Roma, Milano, Napoli"
+                        maxlength="500"
+                        autofocus
+                    />
+                    <button id="searchBtn" onclick="fetchWeather()">
+                        🔍 Cerca
+                    </button>
+                    <button id="geoBtn" onclick="geolocateUser()" title="Usa la mia posizione">
+                        📍 Posizione
+                    </button>
+                </div>
+                <div class="hint-row">
+                    <div class="hint">
+                        Inserisci una o più città separate da virgola. Clicca ♡ per salvare tra i preferiti.
+                    </div>
+                    <!-- Toggle astronomia -->
+                    <label class="astro-toggle" title="Mostra/nascondi dati astronomici">
+                        <input type="checkbox" id="astroToggle" onchange="onAstroToggleChange()">
+                        <span class="astro-toggle-slider"></span>
+                        <span class="astro-toggle-label">🔭 Astronomia</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div id="results"></div>
+        </div>
+
+        <!-- Sidebar preferiti -->
+        <div class="favorites-sidebar" id="favoritesSidebar">
+            <div class="favorites-panel">
+                <div class="favorites-title">❤️ Preferiti</div>
+                <div id="favoritesContainer">
+                    <div class="fav-empty">Nessun preferito.<br>Cerca una città e clicca il cuore!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        const cityInput = document.getElementById('cityInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const geoBtn = document.getElementById('geoBtn');
+        const resultsDiv = document.getElementById('results');
+        const favoritesContainer = document.getElementById('favoritesContainer');
+        const astroToggle = document.getElementById('astroToggle');
+
+        // ── Stato astronomia (localStorage) ──
+        function isAstroEnabled() {
+            return localStorage.getItem('meteo_astro_enabled') === 'true';
+        }
+
+        function setAstroEnabled(val) {
+            localStorage.setItem('meteo_astro_enabled', val ? 'true' : 'false');
+        }
+
+        function onAstroToggleChange() {
+            setAstroEnabled(astroToggle.checked);
+            // Se ci sono risultati visibili, aggiorna la sezione astronomia
+            if (currentResults.length > 0) {
+                renderResults(currentResults);
+                if (astroToggle.checked) {
+                    fetchAstronomyForResults(currentResults);
+                }
+            }
+        }
+
+        // Inizializza toggle
+        astroToggle.checked = isAstroEnabled();
+
+        // ── Gestione preferiti (localStorage) ──
+        function getFavorites() {
+            try {
+                return JSON.parse(localStorage.getItem('meteo_favorites') || '[]');
+            } catch {
+                return [];
+            }
+        }
+
+        function saveFavorites(favs) {
+            localStorage.setItem('meteo_favorites', JSON.stringify(favs));
+        }
+
+        function isFavorite(cityName) {
+            return getFavorites().some(f => f.city.toLowerCase() === cityName.toLowerCase());
+        }
+
+        function addFavorite(data) {
+            const favs = getFavorites();
+            if (favs.some(f => f.city.toLowerCase() === data.city.toLowerCase())) return;
+            favs.push({
+                city: data.city,
+                latitude: data.latitude,
+                longitude: data.longitude,
+                current: data.current
+            });
+            saveFavorites(favs);
+            renderFavorites();
+        }
+
+        function removeFavorite(cityName) {
+            let favs = getFavorites();
+            favs = favs.filter(f => f.city.toLowerCase() !== cityName.toLowerCase());
+            saveFavorites(favs);
+            renderFavorites();
+            updateHeartButtons();
+        }
+
+        function toggleFavorite(data) {
+            if (isFavorite(data.city)) {
+                removeFavorite(data.city);
+            } else {
+                addFavorite(data);
+            }
+            updateHeartButtons();
+        }
+
+        // ── Rendering sidebar preferiti ──
+        function renderFavorites() {
+            const favs = getFavorites();
+            if (favs.length === 0) {
+                favoritesContainer.innerHTML = '<div class="fav-empty">Nessun preferito.<br>Cerca una città e clicca il cuore!</div>';
+                return;
+            }
+            renderFavoritesCards(favs);
+            refreshFavoritesData();
+        }
+
+        async function refreshFavoritesData() {
+            const favs = getFavorites();
+            if (favs.length === 0) return;
+            const cities = favs.map(f => f.city).join(',');
+            try {
+                const url = `${API_BASE}/api/weather?city=${encodeURIComponent(cities)}&days=1`;
+                const response = await fetch(url);
+                if (!response.ok) return;
+                const data = await response.json();
+                const updatedFavs = getFavorites();
+                for (const result of data.results) {
+                    if (result.error) continue;
+                    const idx = updatedFavs.findIndex(f => f.city.toLowerCase() === result.city.toLowerCase());
+                    if (idx >= 0) updatedFavs[idx].current = result.current;
+                }
+                saveFavorites(updatedFavs);
+                renderFavoritesCards(updatedFavs);
+            } catch { /* silenzioso */ }
+        }
+
+        function renderFavoritesCards(favs) {
+            if (favs.length === 0) {
+                favoritesContainer.innerHTML = '<div class="fav-empty">Nessun preferito.<br>Cerca una città e clicca il cuore!</div>';
+                return;
+            }
+            let html = '';
+            for (const fav of favs) {
+                const cur = fav.current || {};
+                html += `
+                    <div class="fav-card" onclick="searchCity('${escJs(fav.city)}')" title="Clicca per cercare ${esc(fav.city)}">
+                        <div class="fav-card-header">
+                            <span class="fav-card-city">☁️ ${esc(fav.city)}</span>
+                            <button class="fav-remove-btn" onclick="event.stopPropagation(); removeFavorite('${escJs(fav.city)}')" title="Rimuovi dai preferiti">✕</button>
+                        </div>
+                        <div class="fav-card-temp">🌡️ ${cur.temperature_c !== undefined ? cur.temperature_c + '°C' : '—'}</div>
+                        <div class="fav-card-stats">
+                            <span class="fav-stat">💧 ${cur.humidity !== undefined ? cur.humidity + '%' : '—'}</span>
+                            <span class="fav-stat">💨 ${cur.wind_speed_kmh !== undefined ? cur.wind_speed_kmh + ' km/h' : '—'}</span>
+                            <span class="fav-stat">🌧 ${cur.precipitation_mm !== undefined ? cur.precipitation_mm + ' mm' : '—'}</span>
+                            <span class="fav-stat">🌡 ${cur.temperature_f !== undefined ? cur.temperature_f + '°F' : '—'}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            favoritesContainer.innerHTML = html;
+        }
+
+        function searchCity(city) {
+            cityInput.value = city;
+            fetchWeather();
+        }
+
+        function updateHeartButtons() {
+            document.querySelectorAll('.heart-btn').forEach(btn => {
+                const city = btn.dataset.city;
+                if (isFavorite(city)) {
+                    btn.classList.add('active');
+                    btn.textContent = '♥';
+                } else {
+                    btn.classList.remove('active');
+                    btn.textContent = '♡';
+                }
+            });
+        }
+
+        let currentResults = [];
+
+        cityInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') fetchWeather();
+        });
+
+        // ── Geolocalizzazione ──
+        function geolocateUser() {
+            if (!navigator.geolocation) {
+                resultsDiv.innerHTML = '<div class="error-msg">⚠️ Il tuo browser non supporta la geolocalizzazione.</div>';
+                return;
+            }
+
+            geoBtn.disabled = true;
+            geoBtn.textContent = '⏳ Localizzando...';
+            resultsDiv.innerHTML = '<div class="loading"><span class="spinner"></span>Rilevamento posizione...</div>';
+
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    try {
+                        const url = `${API_BASE}/api/weather/coords?lat=${lat}&lon=${lon}&days=5`;
+                        const response = await fetch(url);
+                        if (!response.ok) {
+                            const err = await response.json().catch(() => ({}));
+                            throw new Error(err.detail || `Errore ${response.status}`);
+                        }
+                        const data = await response.json();
+                        currentResults = data.results || [];
+                        renderResults(currentResults);
+                        updateFavoritesFromResults(currentResults);
+                        // Fetch astronomia se abilitata
+                        if (isAstroEnabled()) {
+                            fetchAstronomyForResults(currentResults);
+                        }
+                    } catch (error) {
+                        resultsDiv.innerHTML = `<div class="error-msg">❌ ${error.message}</div>`;
+                    } finally {
+                        geoBtn.disabled = false;
+                        geoBtn.textContent = '📍 Posizione';
+                    }
+                },
+                (error) => {
+                    let msg = 'Impossibile rilevare la posizione.';
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            msg = 'Permesso di geolocalizzazione negato. Autorizza il browser per usare questa funzione.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            msg = 'Posizione non disponibile.';
+                            break;
+                        case error.TIMEOUT:
+                            msg = 'Timeout nella rilevazione della posizione.';
+                            break;
+                    }
+                    resultsDiv.innerHTML = `<div class="error-msg">📍 ${msg}</div>`;
+                    geoBtn.disabled = false;
+                    geoBtn.textContent = '📍 Posizione';
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+            );
+        }
+
+        // ── Fetch meteo (ricerca per nome città) ──
+        async function fetchWeather() {
+            const city = cityInput.value.trim();
+            if (!city) {
+                resultsDiv.innerHTML = '<div class="error-msg">⚠️ Inserisci almeno una città.</div>';
+                return;
+            }
+            searchBtn.disabled = true;
+            resultsDiv.innerHTML = '<div class="loading"><span class="spinner"></span>Caricamento dati meteo...</div>';
+            try {
+                const url = `${API_BASE}/api/weather?city=${encodeURIComponent(city)}&days=5`;
+                const response = await fetch(url);
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    const detail = typeof err.detail === 'string' ? err.detail : err.detail?.message || `Errore ${response.status}`;
+                    throw new Error(detail);
+                }
+                const data = await response.json();
+                currentResults = data.results || [];
+                renderResults(currentResults);
+                updateFavoritesFromResults(currentResults);
+                // Fetch astronomia se abilitata
+                if (isAstroEnabled()) {
+                    fetchAstronomyForResults(currentResults);
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error-msg">❌ ${error.message}</div>`;
+            } finally {
+                searchBtn.disabled = false;
+            }
+        }
+
+        // ── Fetch dati astronomici ──
+        async function fetchAstronomyForResults(results) {
+            for (const r of results) {
+                if (r.error || !r.latitude || !r.longitude) continue;
+                const containerId = `astro-${esc(r.city).replace(/\s/g, '-')}`;
+                const container = document.getElementById(containerId);
+                if (!container) continue;
+                container.innerHTML = '<div class="astro-loading"><span class="spinner-small"></span> Caricamento dati astronomici...</div>';
+                try {
+                    const url = `${API_BASE}/api/astronomy?lat=${r.latitude}&lon=${r.longitude}`;
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error('Errore API astronomia');
+                    const data = await response.json();
+                    container.innerHTML = renderAstronomySection(data);
+                } catch (err) {
+                    container.innerHTML = '<div class="astro-error">⚠️ Dati astronomici non disponibili.</div>';
+                }
+            }
+        }
+
+        function renderAstronomySection(data) {
+            let html = '';
+
+            // ── Sole ──
+            const sun = data.sun || {};
+            html += `
+                <div class="astro-sub-section">
+                    <div class="astro-sub-title">☀️ Sole</div>
+                    <div class="astro-sun-info">
+                        <span>🌅 Alba: <strong>${sun.sunrise || '—'}</strong></span>
+                        <span>🌇 Tramonto: <strong>${sun.sunset || '—'}</strong></span>
+                    </div>
+                </div>
+            `;
+
+            // ── Luna ──
+            const moon = data.moon || {};
+            html += `
+                <div class="astro-sub-section">
+                    <div class="astro-sub-title">${moon.emoji || '🌙'} Luna — ${moon.phase_name || '—'}</div>
+                    <div class="astro-moon-info">
+                        <span>Illuminazione: <strong>${moon.phase_pct || 0}%</strong></span>
+                        <span>🌕 Prossima luna piena: <strong>${moon.next_full_moon || '—'}</strong></span>
+                        <span>🌑 Prossima luna nuova: <strong>${moon.next_new_moon || '—'}</strong></span>
+                    </div>
+                </div>
+            `;
+
+            // ── Pianeti visibili ──
+            const visible = data.planets_visible || [];
+            const notVisible = data.planets_not_visible || [];
+            html += `
+                <div class="astro-sub-section">
+                    <div class="astro-sub-title">🪐 Pianeti visibili ora (${visible.length}/${data.total_planets || 7})</div>
+            `;
+            if (visible.length > 0) {
+                html += '<div class="planets-grid">';
+                for (const p of visible) {
+                    html += `
+                        <div class="planet-card planet-visible">
+                            <div class="planet-name">${p.emoji} ${p.name}</div>
+                            <div class="planet-details">
+                                <span>Alt: ${p.altitude_deg}°</span>
+                                <span>Mag: ${p.magnitude}</span>
+                            </div>
+                            <div class="planet-details">
+                                <span>⬆ ${p.rise_time}</span>
+                                <span>⬇ ${p.set_time}</span>
+                            </div>
+                            <div class="planet-constellation">${p.constellation ? '⭐ ' + p.constellation : ''}</div>
+                        </div>
+                    `;
+                }
+                html += '</div>';
+            } else {
+                html += '<div class="astro-note">Nessun pianeta sopra l\'orizzonte in questo momento.</div>';
+            }
+
+            // Pianeti sotto l'orizzonte (collassati)
+            if (notVisible.length > 0) {
+                html += `
+                    <details class="planets-below-horizon">
+                        <summary>Sotto l'orizzonte (${notVisible.length})</summary>
+                        <div class="planets-grid planets-grid-dim">
+                `;
+                for (const p of notVisible) {
+                    html += `
+                        <div class="planet-card planet-not-visible">
+                            <div class="planet-name">${p.emoji} ${p.name}</div>
+                            <div class="planet-details">
+                                <span>⬆ ${p.rise_time}</span>
+                                <span>⬇ ${p.set_time}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                html += '</div></details>';
+            }
+            html += '</div>';
+
+            // ── Eventi astronomici ──
+            const events = data.events || [];
+            if (events.length > 0) {
+                html += `
+                    <div class="astro-sub-section">
+                        <div class="astro-sub-title">📅 Prossimi eventi astronomici</div>
+                        <div class="astro-events-list">
+                `;
+                for (const ev of events) {
+                    let typeClass = 'event-' + (ev.type || 'generic');
+                    html += `
+                        <div class="astro-event ${typeClass}">
+                            <span class="event-date">${ev.date_readable || ev.date}</span>
+                            <span class="event-name">${ev.event}</span>
+                        </div>
+                    `;
+                }
+                html += '</div></div>';
+            }
+
+            return html;
+        }
+
+        function updateFavoritesFromResults(results) {
+            const favs = getFavorites();
+            let changed = false;
+            for (const r of results) {
+                if (r.error) continue;
+                const idx = favs.findIndex(f => f.city.toLowerCase() === r.city.toLowerCase());
+                if (idx >= 0) {
+                    favs[idx].current = r.current;
+                    changed = true;
+                }
+            }
+            if (changed) {
+                saveFavorites(favs);
+                renderFavoritesCards(favs);
+            }
+        }
+
+        function renderResults(results) {
+            if (!results || results.length === 0) {
+                resultsDiv.innerHTML = '<div class="error-msg">Nessun risultato trovato.</div>';
+                return;
+            }
+            let html = '';
+            for (const r of results) {
+                html += r.error ? renderCityError(r) : renderCityCard(r);
+            }
+            resultsDiv.innerHTML = html;
+        }
+
+        function renderCityError(r) {
+            return `
+                <div class="city-error">
+                    <div class="city-name">❌ ${esc(r.city)}</div>
+                    <p>${esc(r.error)}</p>
+                </div>
+            `;
+        }
+
+        function renderCityCard(r) {
+            const cur = r.current || {};
+            const heartActive = isFavorite(r.city) ? 'active' : '';
+            const heartIcon = isFavorite(r.city) ? '♥' : '♡';
+            const geoTag = r.geolocated ? '<span class="geo-badge">📍 La tua posizione</span>' : '';
+            const astroEnabled = isAstroEnabled();
+            const astroContainerId = `astro-${esc(r.city).replace(/\s/g, '-')}`;
+
+            let forecastHtml = '';
+            if (r.forecast && r.forecast.length > 0) {
+                forecastHtml = `
+                    <div class="forecast-title">📅 Previsioni 5 giorni</div>
+                    <div class="forecast-grid">
+                        ${r.forecast.map(day => `
+                            <div class="forecast-day">
+                                <div class="day-name">${esc(day.date_readable || day.date)}</div>
+                                <div class="temps">
+                                    <span class="temp-min">↓ ${day.temp_min_c}°</span>
+                                    <span class="temp-max">↑ ${day.temp_max_c}°</span>
+                                </div>
+                                <div class="details">
+                                    💧 ${day.humidity_mean}%&nbsp;&nbsp;
+                                    💨 ${day.wind_speed_max_kmh} km/h<br>
+                                    🌧 ${day.precipitation_sum_mm} mm
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            let astronomyHtml = '';
+            if (astroEnabled) {
+                astronomyHtml = `
+                    <div class="astronomy-section" id="${astroContainerId}">
+                        <div class="astro-loading"><span class="spinner-small"></span> Caricamento dati astronomici...</div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="city-card">
+                    <div class="city-header">
+                        <div class="city-header-left">
+                            <span class="city-name">☁️ ${esc(r.city)}</span>
+                            ${geoTag}
+                            <button class="heart-btn ${heartActive}" data-city="${esc(r.city)}" onclick="handleHeartClick('${escJs(r.city)}')" title="Aggiungi ai preferiti">
+                                ${heartIcon}
+                            </button>
+                        </div>
+                    </div>
+                    <div class="coords">📍 ${r.latitude}, ${r.longitude}</div>
+                    <div class="current-weather">
+                        <div class="weather-stat">
+                            <div class="icon">🌡️</div>
+                            <div class="value">${cur.temperature_c}°C</div>
+                            <div class="label">${cur.temperature_f}°F</div>
+                        </div>
+                        <div class="weather-stat">
+                            <div class="icon">💧</div>
+                            <div class="value">${cur.humidity}%</div>
+                            <div class="label">Umidità</div>
+                        </div>
+                        <div class="weather-stat">
+                            <div class="icon">💨</div>
+                            <div class="value">${cur.wind_speed_kmh}</div>
+                            <div class="label">km/h Vento</div>
+                        </div>
+                        <div class="weather-stat">
+                            <div class="icon">🌧️</div>
+                            <div class="value">${cur.precipitation_mm}</div>
+                            <div class="label">mm Pioggia</div>
+                        </div>
+                    </div>
+                    ${forecastHtml}
+                    ${astronomyHtml}
+                </div>
+            `;
+        }
+
+        function handleHeartClick(cityName) {
+            const result = currentResults.find(r => r.city === cityName);
+            if (result) toggleFavorite(result);
+        }
+
+        function esc(str) {
+            const d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+
+        /** Escape per contesto attributi JS (onclick, etc.) — previene XSS */
+        function escJs(str) {
+            return String(str)
+                .replace(/\\/g, '\\\\')
+                .replace(/'/g, "\\'")
+                .replace(/"/g, '\\"')
+                .replace(/</g, '\\x3c')
+                .replace(/>/g, '\\x3e');
+        }
+
+        // ── Gestione tema Light/Dark ──
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+
+        function getTheme() {
+            return localStorage.getItem('meteo_theme') || 'light';
+        }
+
+        function setTheme(theme) {
+            localStorage.setItem('meteo_theme', theme);
+            document.documentElement.setAttribute('data-theme', theme);
+            themeToggleBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+            themeToggleBtn.title = theme === 'dark' ? 'Passa a tema Light' : 'Passa a tema Dark';
+        }
+
+        function toggleTheme() {
+            const current = getTheme();
+            setTheme(current === 'dark' ? 'light' : 'dark');
+        }
+
+        // Applica tema salvato al caricamento
+        setTheme(getTheme());
+
+        // ── Init: geolocalizzazione automatica all'apertura ──
+        renderFavorites();
+
+        // Tenta geolocalizzazione automatica se non ci sono risultati/ricerche precedenti
+        (function autoGeolocate() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        try {
+                            resultsDiv.innerHTML = '<div class="loading"><span class="spinner"></span>📍 Rilevamento posizione e caricamento meteo...</div>';
+                            const url = `${API_BASE}/api/weather/coords?lat=${lat}&lon=${lon}&days=5`;
+                            const response = await fetch(url);
+                            if (!response.ok) return;
+                            const data = await response.json();
+                            currentResults = data.results || [];
+                            renderResults(currentResults);
+                            updateFavoritesFromResults(currentResults);
+                            if (isAstroEnabled()) {
+                                fetchAstronomyForResults(currentResults);
+                            }
+                        } catch { /* silenzioso */ }
+                    },
+                    () => { /* Permesso negato o errore: non fare nulla */ },
+                    { enableHighAccuracy: false, timeout: 5000, maximumAge: 600000 }
+                );
+            }
+        })();
+    </script>
+</body>
+</html>
