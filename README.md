@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Meteo App 🌤️
 
 Applicazione Python modulare per il meteo, con CLI, API REST (FastAPI) e interfaccia web.
@@ -224,3 +225,7 @@ python -m pytest tests/ -v
 | Nominatim (OpenStreetMap) | `nominatim.openstreetmap.org` | Reverse geocoding (coordinate → nome) | ❌ No |
 | PyEphem | `pip install ephem` | Calcoli astronomici offline | ❌ No |
 | Browser Geolocation API | `navigator.geolocation` | Posizione GPS dell'utente | Permesso browser |
+=======
+# MeteoApp
+App di prova per corso Generation
+>>>>>>> a05d5591dd682a03d1b1dbfd1b30223e26ff625c
